@@ -29,13 +29,12 @@
                     <TextView
                         android:textColor="@color/colorPrimary"
                         android:textSize="20sp"
-                        android:text="Result"
+                        android:text="Resultado da Leitura"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content" />
 
                     <EditText
                         android:id="@+id/resultEt"
-                        android:hint="Clique para Adicionar uma Imagem"
                         android:autoLink="all"
                         android:padding="5dp"
                         android:textColor="#000"
@@ -58,7 +57,7 @@
                     <TextView
                         android:textColor="@color/colorPrimary"
                         android:textSize="20sp"
-                        android:text="Image Preview"
+                        android:text="Pré Visualização da Imagem"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content" />
 

@@ -10,10 +10,13 @@ import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -53,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int IMAGE_PICK_GALLERY_CODE = 1000;
     private static final int IMAGE_PICK_CAMERA_CODE = 1001;
 
+    StringBuilder sb = new StringBuilder();
     String cameraPermission[];
     String storagePermission[];
 
@@ -64,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         ActionBar actionBar = getSupportActionBar();
-        actionBar.setSubtitle("Clique no Botão + para inserir Imagem");
+        actionBar.setSubtitle("Leitor de Texto em Imagens");
 
         mResultEt = findViewById(R.id.resultEt);
         mPreviewImage = findViewById(R.id.imagemView);
@@ -89,9 +93,9 @@ public class MainActivity extends AppCompatActivity {
             showImageImportDialog();
         }
 
-        if(id == R.id.settings){
-            Toast.makeText(this, "Settings", Toast.LENGTH_LONG).show();
-        }
+//        if(id == R.id.settings){
+//            Toast.makeText(this, "Settings", Toast.LENGTH_LONG).show();
+//        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -231,7 +235,6 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     Frame frame = new Frame.Builder().setBitmap(bitmap).build();
                     SparseArray<TextBlock> items = recognizer.detect(frame);
-                    StringBuilder sb = new StringBuilder();
 
                     for (int i = 0; i < items.size(); i++) {
                         TextBlock myItem = items.valueAt(i);
@@ -240,11 +243,58 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     mResultEt.setText(sb.toString());
+
+                    ClipboardManager clipboard = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
+                    ClipData clip = ClipData.newPlainText(null, sb.toString());
+                    clipboard.setPrimaryClip(clip);
+
+                    //Create Dialog
+                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setTitle("Compartilhar");
+                    builder.setMessage("Deseja compartilhar o Texto?");
+
+                    builder.setPositiveButton("Sim", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            String singleString = sb.toString();
+                            enviarWhatsApp(singleString);
+                            dialog.dismiss();
+                        }
+                    });
+
+                    builder.setNegativeButton("Não", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            // Do nothing
+                            dialog.dismiss();
+                        }
+                    });
+
+                    AlertDialog alert = builder.create();
+                    alert.show();
                 }
             } else if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
                 Exception error = result.getError();
                 Toast.makeText(this, "" + error, Toast.LENGTH_SHORT).show();
             }
+        }
+    }
+
+    public void enviarWhatsApp(String mensagem) {
+        PackageManager pm=getPackageManager();
+        try {
+
+            Intent waIntent = new Intent(Intent.ACTION_SEND);
+            waIntent.setType("text/plain");
+            String text = mensagem;
+
+            PackageInfo info=pm.getPackageInfo("com.whatsapp", PackageManager.GET_META_DATA);
+            waIntent.setPackage("com.whatsapp");
+
+            waIntent.putExtra(Intent.EXTRA_TEXT, text);
+            startActivity(waIntent);
+
+        } catch (PackageManager.NameNotFoundException e) {
+            Toast.makeText(this, "WhatsApp não instalado", Toast.LENGTH_SHORT).show();
         }
     }
 }
